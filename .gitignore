@@ -1,0 +1,82 @@
+# === Visual Studio ===
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# === VS Code ===
+.vscode/
+
+# === Rider ===
+.idea/
+*.sln.iml
+
+# === Build ===
+bin/
+obj/
+[Bb]uild/
+[Ll]og/
+[Ll]ogs/
+
+# === Compilados y temporales ===
+*.dll
+*.exe
+*.pdb
+*.cache
+*.tmp
+*.log
+
+# === .NET Core ===
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# === Paquetes ===
+**/packages/
+!**/packages/build/
+*.nupkg
+*.snupkg
+
+# === Node (si tu proyecto tiene front Angular/React dentro) ===
+node_modules/
+
+# === Publicaciones ===
+publish/
+*.[Pp]ublish.xml
+*.pubxml
+*.publishproj
+
+# === Azure ===
+csx/
+*.build.csdef
+ecf/
+rcf/
+
+# === Test Results ===
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# === NUnit ===
+*.VisualState.xml
+TestResult.xml
+nunit-*.xml
+
+# === Code Coverage ===
+*.coverage
+*.coveragexml
+coverage*.json
+coverage*.xml
+coverage*.info
+
+# === Otros archivos innecesarios ===
+*.dbmdl
+*.jfm
+*.pfx
+*.pfx
+*.publishsettings
+*.rptproj.bak
+
+# === Python cache (cuando mezclan scripts) ===
+__pycache__/
+*.pyc
