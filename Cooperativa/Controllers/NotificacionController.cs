@@ -39,6 +39,14 @@ namespace Cooperativa.Controllers
 
 
         [HttpPost]
+        public async Task<IActionResult> EnviarCorreoBasico([FromBody] NotificacionCrud.EnviarCorreoBasico.CommandCorreoGamil query)
+        {
+            var res = await _mediator.Send(query); ;
+            return Ok(res);
+        }
+
+
+        [HttpPost]
         public async Task<IActionResult> EnviarCorreoPagoPIM([FromBody] NotificacionCrud.EnviarCorreoPagoPIM.CommandCorreoGamil query)
         {
             var res = await _mediator.Send(query); ;

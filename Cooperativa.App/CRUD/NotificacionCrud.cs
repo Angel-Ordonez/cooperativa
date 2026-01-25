@@ -2,6 +2,7 @@
 using Cooperativa.App.Domain.Model;
 using Cooperativa.App.Domain.Model.People;
 using Cooperativa.App.Engine;
+using Cooperativa.App.Utilidades;
 using Mapster;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +22,157 @@ namespace Cooperativa.App.CRUD
 {
     public class NotificacionCrud
     {
+
+        public class EnviarCorreoBasico
+        {
+            public class CommandCorreoGamil : IRequest<AppResult>
+            {
+                public string Titulo { get; set; }
+                public string Body { get; set; }
+                public List<string> Correos { get; set; }
+                public Guid? PersonaId { get; set; }
+            }
+
+            public class CommandHandlerSocioInversionBySocioAndAnio : IRequestHandler<CommandCorreoGamil, AppResult>
+            {
+                private readonly CooperativaDbContext _context;
+                private readonly INotificacionesEngine _inotificacionesEngine;
+
+                public CommandHandlerSocioInversionBySocioAndAnio(CooperativaDbContext context, INotificacionesEngine inotificacionesEngine)
+                {
+                    _context = context;
+                    _inotificacionesEngine = inotificacionesEngine;
+                }
+
+                public async Task<AppResult> Handle(CommandCorreoGamil command, CancellationToken cancellationToken)
+                {
+                    try
+                    {
+                        string nombrePersona = "";
+                        string genero = "";
+
+                        if (command.PersonaId != null && command.PersonaId != Guid.Empty)
+                        {
+                            var persona = await _context.Persona
+                                .Where(x => x.Id == command.PersonaId && !x.IsSoftDeleted)
+                                .FirstOrDefaultAsync();
+
+                            persona.ThrowIfNull("Persona no existe");
+
+                            nombrePersona = persona.Nombre + " " + persona.Apellido;
+                            genero = persona.Genero.ToLower().Contains("femenino") ? "Estimada Sra." : "Estimado Sr.";
+                        }
+
+                        if (string.IsNullOrEmpty(command.Titulo))
+                        {
+                            command.Titulo = "QTS Informa";
+                        }
+
+                        // Convertir saltos de línea a <br>
+                        string mensajeFormateado = command.Body?.Replace("\n", "<br>") ?? "";
+
+                        string body = $@"
+                        <!DOCTYPE html>
+                        <html lang='es'>
+                        <head>
+                            <meta charset='UTF-8'>
+                            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                            <style>
+                                body {{
+                                    margin:0;
+                                    padding:0;
+                                    font-family: Arial, Helvetica, sans-serif;
+                                    background-color:#f4f6f8;
+                                    color:#333;
+                                }}
+                                .container {{
+                                    width:100%;
+                                    padding:20px;
+                                    box-sizing:border-box;
+                                }}
+                                .header {{
+                                    background-color:#003a8f;
+                                    color:#fff;
+                                    padding:10px 20px;
+                                    border-radius:4px 4px 0 0;
+                                    font-size:18px;
+                                    font-weight:bold;
+                                }}
+                                .content {{
+                                    background-color:#ffffff;
+                                    padding:25px;
+                                    border-radius:0 0 4px 4px;
+                                    margin-top:0;
+                                    font-size:15px;
+                                    line-height:1.7;
+                                    border-right:4px solid #003a8f;
+                                }}
+                                .saludo {{
+                                    font-size:16px;
+                                    margin-bottom:15px;
+                                }}
+                                .mensaje {{
+                                    font-size:15px;
+                                    line-height:1.7;
+                                }}
+                                .despedida {{
+                                    margin-top:75px;
+                                    font-size:14px;
+                                }}
+                                .footer {{
+                                    font-size:12px;
+                                    color:#777;
+                                    margin-top:20px;
+                                }}
+                            </style>
+                        </head>
+                        <body>
+                            <div class='container'>
+                                <div class='header'>COOPAZ Informa</div>
+
+                                <div class='content'>
+                                    <div class='saludo'>
+                                        {(!string.IsNullOrEmpty(nombrePersona) && !string.IsNullOrEmpty(genero)
+                                                    ? $"{genero} {nombrePersona},"
+                                                    : "Estimado/a,")}
+                                    </div>
+
+                                    <div class='mensaje'>{mensajeFormateado}</div>
+
+                                    <div class='despedida'>
+                                        Atentamente,<br>
+                                        <strong>Departamento de Atención al Cliente</strong><br>
+                                        QTS Cooperativa Friends<br>
+                                        Honduras<br>
+                                        {DateTime.Now.ToString("dd-MM-yyyy hh:mm tt")}<br>
+                                        <a href='https://servcicesordonez.web.app' target='_blank'>https://servcicesordonez.web.app</a>
+                                    </div>
+                                </div>
+
+                                <div class='footer'>
+                                    Este correo electrónico ha sido enviado automáticamente. Por favor, no responder a este mensaje.<br>
+                                    Cooperativa Financiera - Todos los derechos reservados
+                                </div>
+                            </div>
+                        </body>
+                        </html>
+                        ";
+
+                        var enviar = await _inotificacionesEngine.CrearCorreo(command.Correos, body, command.Titulo);
+                        return enviar;
+                    }
+                    catch (Exception ex)
+                    {
+                        return AppResult.New(false, ex.Message);
+                    }
+                }
+            }
+        }
+
+
+
+
+
 
         public class EnviarCorreo
         {
