@@ -3,6 +3,7 @@ using Cooperativa.App.Engine;
 using Cooperativa.App.Soluciones;
 using Cooperativa.App.Soluciones.Pdf;
 using Cooperativa.App.Utilidades;
+using Hangfire;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -51,6 +52,12 @@ namespace Cooperativa
 
             services.AddDbContextPool<CooperativaDbContext>(options =>
                                         options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+
+            //Configuración de Hangfire (Dejar activiades trabajando en segundo plano)
+            services.AddHangfire(config => config.UseSqlServerStorage(Configuration.GetConnectionString("DefaultConnection")));
+            services.AddHangfireServer();
+
+            //Engine
             services.AddTransient<IExchangeratesService, ExchangeratesService>();
             services.AddTransient<ICalculationService, CalculationService>();
             services.AddTransient<IQRServices, QRServices>();
@@ -92,6 +99,8 @@ namespace Cooperativa
             app.UseRouting();
 
             app.UseAuthorization();
+
+            app.UseHangfireDashboard(); //https://localhost:5000/hangfire: activa el “Dashboard” web de Hangfire, que es una interfaz visual donde puedes ver y administrar todos los trabajos en segundo plano.
 
             app.UseEndpoints(endpoints =>
             {

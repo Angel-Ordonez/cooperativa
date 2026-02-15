@@ -7,6 +7,7 @@ using Cooperativa.App.Domain.Model.Prestamos;
 using Cooperativa.App.Domain.Model.Socios;
 using Cooperativa.App.Engine;
 using Cooperativa.App.Utilidades;
+using Hangfire;
 using Mapster;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -479,8 +480,8 @@ namespace Cooperativa.App.CRUD
                         }
 
 
-                        var enviarNotificacionCorreo = await _inotificacionesEngine.EnviarCorreoPagoPIM(newDetalle.Id);
-
+                        //var enviarNotificacionCorreo = await _inotificacionesEngine.EnviarCorreoPagoPIM(newDetalle.Id);
+                        BackgroundJob.Enqueue(() => _inotificacionesEngine.EnviarCorreoPagoPIM(newDetalle.Id));
 
 
                         return AppResult.New(true, salida);

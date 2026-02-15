@@ -16,6 +16,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Hangfire;
+
 
 namespace Cooperativa.App
 {
@@ -45,8 +47,15 @@ namespace Cooperativa.App
             });
             services.AddSwaggerGen();
 
-            services.AddDbContextPool<CooperativaDbContext>(options =>
-                                        options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+            //Conexion BD
+            services.AddDbContextPool<CooperativaDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+
+            //Configuración de Hangfire (Dejar activiades trabajando en segundo plano)
+            //services.AddHangfire(config => config.UseSqlServerStorage(Configuration.GetConnectionString("DefaultConnection")));
+            //services.AddHangfireServer();
+
+
+            //Engine
             services.AddTransient<IExchangeratesService, ExchangeratesService>();
             services.AddTransient<ICalculationService, CalculationService>();
             services.AddTransient<IQRServices, QRServices>();

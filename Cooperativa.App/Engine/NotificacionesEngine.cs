@@ -257,14 +257,22 @@ namespace Cooperativa.App.Engine
                     body += $"<p style='font-size:16px; margin-top:0;'>Hola <strong>{prestamoDetalle.Cliente.Nombre.ToUpper()} {prestamoDetalle.Cliente.Apellido.ToUpper()}</strong>,</p>";
 
                     /* Mensaje principal */
-                    body += "<table width='100%' style='border-collapse:collapse; margin:12px 0 0 0;'>";
+                    body += "<table width='100%' role='presentation' style='border-collapse:collapse; margin:12px 0 0 0;'>";
                     body += "<tr>";
-                    body += "<td style='font-size:13px; color:#333; font-weight:bold;'>";
-                    body += "Se le informa que se ha registrado pago por";
+
+                    // TEXTO
+                    body += "<td style='font-size:13px; color:#333; font-weight:bold; white-space:nowrap;'>";
+                    body += "Se le informa pago registrado por";
                     body += "</td>";
-                    body += "<td style='font-size:18px; color:#003a8f; font-weight:bold; text-align:right;'>";
-                    body += $"LPS {prestamoDetalle.TotalAPagar.ToString("N2")}";
+
+                    // ESPACIADOR (clave para móvil)
+                    body += "<td width='100%'>&nbsp;</td>";
+
+                    // MONTO
+                    body += "<td style='font-size:18px; color:#003a8f; font-weight:bold; text-align:right; white-space:nowrap; padding-left:10px;'>";
+                    body += $"LPS&nbsp;{prestamoDetalle.TotalAPagar.ToString("N2")}";
                     body += "</td>";
+
                     body += "</tr>";
                     body += "</table>";
 
@@ -367,7 +375,7 @@ namespace Cooperativa.App.Engine
 
 
 
-        public async Task<AppResult> EnviarCorreoPagoPIM( Guid prestamoDetalleId)
+        public async Task<AppResult> EnviarCorreoPagoPIM(Guid prestamoDetalleId)
         {
             try
             {
@@ -451,14 +459,22 @@ namespace Cooperativa.App.Engine
                     body += $"<p style='font-size:16px; margin-top:0;'>Hola <strong>{cliente.Nombre.ToUpper()} {cliente.Apellido.ToUpper()}</strong>,</p>";
 
                     /* Mensaje principal */
-                    body += "<table width='100%' style='border-collapse:collapse; margin:12px 0 0 0;'>";
+                    body += "<table width='100%' role='presentation' style='border-collapse:collapse; margin:12px 0 0 0;'>";
                     body += "<tr>";
-                    body += "<td style='font-size:13px; color:#333; font-weight:bold;'>";
+
+                    // TEXTO
+                    body += "<td style='font-size:13px; color:#333; font-weight:bold; white-space:nowrap;'>";
                     body += "Se le informa pago registrado por";
                     body += "</td>";
-                    body += "<td style='font-size:18px; color:#003a8f; font-weight:bold; text-align:right;'>";
-                    body += $"LPS {prestamoDetalle.TotalAPagar.ToString("N2")}";
+
+                    // ESPACIADOR (clave para móvil)
+                    body += "<td width='100%'>&nbsp;</td>";
+
+                    // MONTO
+                    body += "<td style='font-size:18px; color:#003a8f; font-weight:bold; text-align:right; white-space:nowrap; padding-left:10px;'>";
+                    body += $"LPS&nbsp;{prestamoDetalle.TotalAPagar.ToString("N2")}";
                     body += "</td>";
+
                     body += "</tr>";
                     body += "</table>";
 
@@ -486,21 +502,28 @@ namespace Cooperativa.App.Engine
 
 
                     AddRow("Prestamo", prestamoDetalle.Prestamo.CodigoPrestamo);
-                    AddRow("Cantidad Inicial", prestamoDetalle.Prestamo.CantidadInicial.ToString("N2"));
-                    AddRow("Cantidad Actual", prestamoDetalle.Prestamo.RestaCapital.ToString("N2"));
+                    AddRow("Capital Inicial", prestamoDetalle.Prestamo.CantidadInicial.ToString("N2"));
+                    AddRow("Capital Actual", prestamoDetalle.Prestamo.RestaCapital.ToString("N2"));
                     AddRow("Fecha y hora de pago", prestamoDetalle.CreatedDate.ToString("dd-MM-yyyy hh:mm tt"));
                     AddRow("Numero de Cuota", prestamoDetalle.NumeroCuota.ToString());
                     //AddRow("Monto Recibido", $"<span style='color:#003a8f; font-size:15px;'> {prestamoDetalle.TotalAPagar.ToString("N2")} </span>" );
                     AddRow("Interes", prestamoDetalle.MontoInteres.ToString("N2"));
                     AddRow("Capital Aportado", prestamoDetalle.MontoCapital.ToString("N2"));
                     AddRow("Pago hasta el dia", prestamoDetalle.FechaPago.ToString("dd-MM-yyyy"));
+
                     if (cuentaBancaria != null)
                     {
                         AddRow("Cuenta Origen", cuentaBancaria.NombreCompletoCuenta);
                         AddRow("Referencia Bancaria", prestamoDetalle.ReferenciaBancaria);
                     }
-                    AddRow("Fecha proximo pago", prestamoDetalle.FechaProximoPago.ToString("dd-MM-yyyy"));
-                    AddRow("Proximo pago", prestamoDetalle.ProximoPago.ToString("N2"));
+
+                    AddRow("Estado", prestamoDetalle.Prestamo.Estado_Descripcion.ToUpper());
+
+                    if (prestamoDetalle.Prestamo.Estado != Domain.Enum.EstadoPrestamo.Pagado)
+                    {
+                        AddRow("Fecha proximo pago", prestamoDetalle.FechaProximoPago.ToString("dd-MM-yyyy"));
+                        AddRow("Proximo pago", prestamoDetalle.ProximoPago.ToString("N2"));
+                    }
 
 
 

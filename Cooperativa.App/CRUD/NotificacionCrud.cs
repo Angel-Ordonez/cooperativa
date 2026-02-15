@@ -398,14 +398,17 @@ namespace Cooperativa.App.CRUD
                             correos.AddRange(command.Correos);
                         }
 
-                        var prestamoDetalleId = new Guid("606819C5-7F1E-42F7-AE3D-08DE555DE24B");
+                        var prestamoDetalleId = new Guid("449431E2-B3C0-4281-0316-08DE36AC863C");
                         if(command.PrestamoDetalleId != null && command.PrestamoDetalleId != Guid.Empty)
                         {
                             prestamoDetalleId = (Guid)command.PrestamoDetalleId;
 
                         }
 
-                        var enviar = await _inotificacionesEngine.EnviarCorreoPagoPIM(correos, prestamoDetalleId);
+                        //var enviar = await _inotificacionesEngine.EnviarCorreoPagoPIM(correos, prestamoDetalleId);
+
+
+                        var enviar = await _inotificacionesEngine.EnviarCorreoPagoPIM(prestamoDetalleId);
 
                         return enviar;
                     }

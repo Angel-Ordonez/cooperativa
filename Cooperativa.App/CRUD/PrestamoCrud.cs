@@ -1038,17 +1038,17 @@ namespace Cooperativa.App.CRUD
 
                             #region Validar Fecha de entrega
                             var hoy = DateTime.Now;
-                            if (command.FechaEntregado == null || command.FechaEntregado == DateTime.MinValue || command.FechaEntregado < hoy)
-                            {
-                                if(command.FechaEntregado < hoy)
-                                {
-                                    throw new Exception("Fecha de entrega no puede ser menor que hoy");
-                                }
-                                else
-                                {
-                                    throw new Exception("Fecha de entrega no puede ser vacia");
-                                }
-                            }
+                            //if (command.FechaEntregado == null || command.FechaEntregado == DateTime.MinValue || command.FechaEntregado < hoy)
+                            //{
+                            //    if (command.FechaEntregado < hoy)
+                            //    {
+                            //        throw new Exception("Fecha de entrega no puede ser menor que hoy");
+                            //    }
+                            //    else
+                            //    {
+                            //        throw new Exception("Fecha de entrega no puede ser vacia");
+                            //    }
+                            //}
 
                             #endregion
 
