@@ -200,15 +200,17 @@ namespace Cooperativa.App.CRUD
 
 
 
-        public class ReporteDashboardGananciasRetirosGlobalV2
+        public class ReporteDashboardGananciasFinanzas
         {
             public class ReporteVm
             {
                 public decimal GananciaGlobal { get; set; }
                 public decimal RetirosGlobal { get; set; }
                 public decimal RetirosGlobalSocio { get; set; }
-                public decimal GananciaGlobalNeta { get; set; }         //Aqui no le sumo los retiros de los socios
-                public decimal GananciaGlobalNetaActual { get; set; }
+                public decimal SocioInversionesGlobal { get; set; }
+                public decimal SocioInversionesActivoGlobal { get; set; }
+                public decimal BalanceGlobal { get; set; }
+                public decimal GananciaDespuesDeInversiones { get; set; }
                 public List<GananciaRetiroAnioVm> GananciaAndRetirosAnios { get; set; }
                 public List<GananciaAnioModuloVm> GananciasAnioModulo { get; set; }
             }
@@ -218,17 +220,19 @@ namespace Cooperativa.App.CRUD
                 public decimal TotalGanancia { get; set; }
                 public decimal TotalRetirado { get; set; }
                 public decimal TotalRetiradoSocios { get; set; }
-                public decimal TotalGananciaNeta { get; set; }
+                public decimal TotalSocioInversiones { get; set; }
+                public decimal BalanceNeto { get; set; }
                 public List<GananciaRetiroMesVm> Meses { get; set; }
             }
             public class GananciaRetiroMesVm
             {
                 public DateTime Fecha { get; set; }
+                public int Mes { get; set; }
                 public string MesDescripcion { get; set; }
                 public decimal GananciaMes { get; set; }
                 public decimal RetiradoMes { get; set; }
                 public decimal RetiradoMesSocios { get; set; }
-                public decimal GananciaTotalNetaMes { get; set; }
+                public decimal SocioInversiones { get; set; }
             }
             public class GananciaAnioModuloVm
             {
@@ -249,6 +253,17 @@ namespace Cooperativa.App.CRUD
                 public string MesDescripcion { get; set; }
                 public decimal GananciaMes { get; set; }
             }
+
+
+            public class SocioInversionMesVm
+            {
+                public int Mes { get; set; }
+                public string MesDescripcion { get; set; }
+                public decimal GananciaMes { get; set; }
+            }
+
+
+
 
 
             public class QueryPrestamosIndex : IRequest<ReporteVm>
@@ -274,11 +289,28 @@ namespace Cooperativa.App.CRUD
                         .AsNoTracking()
                         .ToListAsync();
 
-                    var anios = prestamos.Select(x => x.CreatedDate.Year).Distinct().ToList();
-                    var estados = prestamos.Select(x => x.Estado).Distinct().ToList();
-
+                    var sociosInversiones = await _context.SocioInversion.Where(x => !x.IsSoftDeleted).AsNoTracking().ToListAsync();
+                    var aniosInversiones = sociosInversiones.Select(x => x.CreatedDate.Year).Distinct().ToList();
+                    var mesesInversiones = sociosInversiones.Select(x => x.CreatedDate.Month).Distinct().ToList();
 
                     var retiros = await _context.Retiro.Where(x => x.Estado == EstadoRetiro.Aprobado && !x.IsSoftDeleted && x.Enabled).ToListAsync();
+                    var aniosRetiro = retiros.Select(x => x.CreatedDate.Year).Distinct().ToList();
+                    var mesesRetiro = retiros.Select(x => x.CreatedDate.Month).Distinct().ToList();
+
+
+                    var anios = prestamos.Select(x => x.CreatedDate.Year).Distinct().ToList();
+                    anios.AddRange(aniosInversiones);
+                    anios.AddRange(aniosRetiro);
+                    anios = anios.Distinct().ToList();
+
+
+                    var meses = prestamos.Select(x => x.CreatedDate.Month).Distinct().ToList();
+                    meses.AddRange(mesesInversiones);
+                    meses.AddRange(mesesRetiro);
+                    meses = meses.Distinct().ToList();
+
+
+
 
 
                     var reporteRes = new ReporteVm
@@ -293,12 +325,6 @@ namespace Cooperativa.App.CRUD
                     {
                         var anio = anios.ElementAt(i);
 
-                        var mesesAnio = prestamos.Where(x => x.CreatedDate.Year == anio).Select(x => x.CreatedDate.Month).Distinct().ToList();
-                        var mesesRetiros = retiros.Where(x => x.CreatedDate.Year == anio).Select(x => x.CreatedDate.Month).Distinct().ToList();
-
-                        mesesAnio.AddRange(mesesRetiros);
-                        mesesAnio = mesesAnio.Distinct().ToList();
-
                         var gananciaRetiroAnio = new GananciaRetiroAnioVm
                         {
                             Anio = anio,
@@ -312,9 +338,9 @@ namespace Cooperativa.App.CRUD
                             Meses = new List<GananciaRetiroMesModuloVm>()
                         };
 
-                        for (int m = 0; m < mesesAnio.Count(); m++)
+                        for (int m = 0; m < meses.Count(); m++)
                         {
-                            var mes = mesesAnio.ElementAt(m);
+                            var mes = meses.ElementAt(m);
 
                             var prestamosMesAnio = prestamos.Where(x => x.CreatedDate.Year == anio && x.CreatedDate.Month == mes).ToList();
                             var prestamosMesAnioIds = prestamosMesAnio.Select(x => x.Id).ToList();
@@ -327,6 +353,11 @@ namespace Cooperativa.App.CRUD
 
                             var retirosMesAnioSocio = retiros.Where(x => x.CreatedDate.Year == anio && x.CreatedDate.Month == mes && x.TipoRetiro == TipoRetiro.InversionGananciaSocio).ToList();
                             var totalRetiroMesSocio = retirosMesAnioSocio.Sum(x => x.Monto);
+
+
+                            var sociosInversionesMesAnio = sociosInversiones.Where(x => x.CreatedDate.Year == anio && x.CreatedDate.Month == mes).ToList();
+                            var sociosInversionesMes = sociosInversionesMesAnio.Sum(x => x.Cantidad);
+
 
                             #region Mostrar hasta que dia del mes se saco el reporte
                             var hoy = DateTime.Today;
@@ -349,11 +380,12 @@ namespace Cooperativa.App.CRUD
                             var gananciaReritoMes = new GananciaRetiroMesVm
                             {
                                 Fecha = fecha,
+                                Mes = mes,
                                 MesDescripcion = MesDescripcion.GetMesTexto(mes),
                                 GananciaMes = gananciasMes,
                                 RetiradoMes = totalRetiroMes,
-                                GananciaTotalNetaMes = gananciasMes - totalRetiroMes,
-                                RetiradoMesSocios = totalRetiroMesSocio
+                                RetiradoMesSocios = totalRetiroMesSocio,
+                                SocioInversiones = sociosInversionesMes
                             };
                             gananciaRetiroAnio.Meses.Add(gananciaReritoMes);
                             gananciaRetiroAnioModulo.Meses.Add(gananciaReritoMes.Adapt<GananciaRetiroMesModuloVm>());
@@ -362,7 +394,8 @@ namespace Cooperativa.App.CRUD
                         gananciaRetiroAnio.TotalGanancia = gananciaRetiroAnio.Meses.Sum(x => x.GananciaMes);
                         gananciaRetiroAnio.TotalRetirado = gananciaRetiroAnio.Meses.Sum(x => x.RetiradoMes);
                         gananciaRetiroAnio.TotalRetiradoSocios = gananciaRetiroAnio.Meses.Sum(x => x.RetiradoMesSocios);
-                        gananciaRetiroAnio.TotalGananciaNeta = gananciaRetiroAnio.TotalGanancia - gananciaRetiroAnio.TotalRetirado;
+                        gananciaRetiroAnio.TotalSocioInversiones = gananciaRetiroAnio.Meses.Sum(x => x.SocioInversiones);
+                        gananciaRetiroAnio.BalanceNeto = (gananciaRetiroAnio.TotalGanancia + gananciaRetiroAnio.TotalSocioInversiones) - gananciaRetiroAnio.TotalRetirado;
                         //Modulos
                         gananciaRetiroAnioModulo.TotalGanancia = gananciaRetiroAnioModulo.Meses.Sum(x => x.GananciaMes);
 
@@ -384,11 +417,16 @@ namespace Cooperativa.App.CRUD
                     };
                     respuesta.GananciaGlobal = respuesta.GananciaAndRetirosAnios.Sum(x => x.TotalGanancia);
                     respuesta.RetirosGlobal = respuesta.GananciaAndRetirosAnios.Sum(x => x.TotalRetirado);
-                    respuesta.GananciaGlobalNeta = respuesta.GananciaAndRetirosAnios.Sum(x => x.TotalGananciaNeta);
                     respuesta.RetirosGlobalSocio = respuesta.GananciaAndRetirosAnios.Sum(x => x.TotalRetiradoSocios);
 
-                    respuesta.GananciaGlobalNeta = respuesta.GananciaAndRetirosAnios.Sum(x => x.TotalGananciaNeta);
-                    //respuesta.GananciaGlobalNetaActual = 
+                    var sociosInes = respuesta.GananciaAndRetirosAnios.Select(x => x.TotalSocioInversiones).ToList();
+                    var socioIActual = sociosInversiones.Sum(x => x.CantidadActiva);
+                    respuesta.SocioInversionesActivoGlobal = socioIActual;
+
+                    respuesta.SocioInversionesGlobal = respuesta.GananciaAndRetirosAnios.Sum(x => x.TotalSocioInversiones);
+                    respuesta.BalanceGlobal = (respuesta.GananciaGlobal + respuesta.SocioInversionesGlobal) - respuesta.RetirosGlobal;
+
+                    respuesta.GananciaDespuesDeInversiones = respuesta.BalanceGlobal - respuesta.SocioInversionesActivoGlobal;
 
                     return respuesta;
                 }

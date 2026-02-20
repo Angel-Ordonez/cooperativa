@@ -28,7 +28,12 @@ namespace Cooperativa.Controllers
             return Ok(res);
         }
 
-
+        [HttpGet]
+        public async Task<IActionResult> ReporteDashboardGananciasFinanzas([FromQuery] ReporteDashboardCrud.ReporteDashboardGananciasFinanzas.QueryPrestamosIndex query)
+        {
+            var res = await _mediator.Send(query); ;
+            return Ok(res);
+        }
 
 
 
