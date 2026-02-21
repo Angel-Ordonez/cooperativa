@@ -390,6 +390,8 @@ namespace Cooperativa.App.CRUD
                             gananciaRetiroAnio.Meses.Add(gananciaReritoMes);
                             gananciaRetiroAnioModulo.Meses.Add(gananciaReritoMes.Adapt<GananciaRetiroMesModuloVm>());
                         }
+                        gananciaRetiroAnioModulo.Meses = gananciaRetiroAnioModulo.Meses.OrderBy(x => x.Mes).ToList();
+                        gananciaRetiroAnio.Meses = gananciaRetiroAnio.Meses.OrderBy(x => x.Mes).ToList();
 
                         gananciaRetiroAnio.TotalGanancia = gananciaRetiroAnio.Meses.Sum(x => x.GananciaMes);
                         gananciaRetiroAnio.TotalRetirado = gananciaRetiroAnio.Meses.Sum(x => x.RetiradoMes);
